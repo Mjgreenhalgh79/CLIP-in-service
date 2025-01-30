@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train LCID 9 Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        p {
+            font-size: 18px;
+        }
+        .status {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Train LCID 9 Status</h1>
+    <p id="status">Checking status...</p>
+
+    <script>
+        async function checkTrainStatus() {
+            try {
+                const response = await fetch("https://api.tfl.gov.uk/Line/central/Arrivals");
+                const data = await response.json();
+
+                let trainFound = false;
+                let message = "LCID 9 is NOT currently in service.";
+
+                data.forEach(train => {
+                    if (train.vehicleId == "9") {  // Ensure vehicleId matches LCID 9
+                        trainFound = true;
+                        message = `🚆 LCID 9 is in service! It is at <strong>${train.stationName}</strong> heading to <strong>${train.destinationName}</strong>.`;
+                    }
+                });
+
+                document.getElementById("status").innerHTML = message;
+            } catch (error) {
+                document.getElementById("status").innerHTML = "Error fetching data. Please try again.";
+            }
+        }
+
+        checkTrainStatus();
+    </script>
+</body>
+</html>

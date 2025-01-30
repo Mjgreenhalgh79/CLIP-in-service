@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Train LCID 9 Status</title>
+    <title>Central Line Trains In Service</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,44 +12,88 @@
             margin: 20px;
         }
         h1 {
-            color: #4CAF50;
+            color: #d32f2f;
         }
-        p {
-            font-size: 18px;
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: white;
         }
-        .status {
-            font-weight: bold;
-            color: #333;
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #d32f2f;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-    <h1>Train LCID 9 Status</h1>
-    <p id="status">Checking status...</p>
+    <h1>🚆 Central Line Trains In Service</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Train LCID</th>
+                <th>Current Location</th>
+            </tr>
+        </thead>
+        <tbody id="trainData">
+            <tr><td colspan="2">Loading data...</td></tr>
+        </tbody>
+    </table>
 
     <script>
-        async function checkTrainStatus() {
+        async function fetchCentralLineTrains() {
             try {
                 const response = await fetch("https://api.tfl.gov.uk/Line/central/Arrivals");
                 const data = await response.json();
+                const tableBody = document.getElementById("trainData");
 
-                let trainFound = false;
-                let message = "LCID 9 is NOT currently in service.";
+                // Clear previous table data
+                tableBody.innerHTML = "";
 
+                // Filter out unique trains in service
+                let trains = {};
                 data.forEach(train => {
-                    if (train.vehicleId == "9") {  // Ensure vehicleId matches LCID 9
-                        trainFound = true;
-                        message = `🚆 LCID 9 is in service! It is at <strong>${train.stationName}</strong> heading to <strong>${train.destinationName}</strong>.`;
+                    const lcid = train.vehicleId;
+                    const location = train.stationName || "Between stations";
+
+                    if (!trains[lcid]) {
+                        trains[lcid] = location;
                     }
                 });
 
-                document.getElementById("status").innerHTML = message;
+                // Populate table
+                Object.entries(trains).forEach(([lcid, location]) => {
+                    let row = `<tr>
+                        <td>${lcid}</td>
+                        <td>${location}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+
+                // If no trains found
+                if (Object.keys(trains).length === 0) {
+                    tableBody.innerHTML = "<tr><td colspan='2'>No Central Line trains currently in service.</td></tr>";
+                }
+
             } catch (error) {
-                document.getElementById("status").innerHTML = "Error fetching data. Please try again.";
+                document.getElementById("trainData").innerHTML = 
+                    "<tr><td colspan='2'>Error fetching data. Try again later.</td></tr>";
             }
         }
 
-        checkTrainStatus();
+        // Fetch train data when page loads
+        fetchCentralLineTrains();
+
+        // Auto-refresh every 60 seconds
+        setInterval(fetchCentralLineTrains, 60000);
     </script>
 </body>
 </html>
